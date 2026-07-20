@@ -25,12 +25,42 @@
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="ARPCOMMENTS" Value="MIT-licensed Windows screenshot developer utility by XCON / X-LAB." />
+    <Property Id="ARPCONTACT" Value="XCON" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/End1essspace/SCapturer/issues" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/End1essspace/SCapturer" />
     <Property Id="DISABLEADVTSHORTCUTS" Value="1" />
+
+    <Property Id="INSTALLFOLDER" Secure="yes">
+      <RegistrySearch
+        Id="PreviousInstallFolderSearch"
+        Root="HKCU"
+        Key="Software\X-LAB\SCapturer"
+        Name="InstallLocation"
+        Type="raw"
+        Win64="yes" />
+    </Property>
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property
       Id="WIXUI_EXITDIALOGOPTIONALTEXT"
-      Value="SCapturer was installed for the current user. Open it from the X-LAB folder in the Start Menu." />
+      Value="SCapturer is ready to use. You can also open it later from the X-LAB folder in the Start Menu." />
+    <Property
+      Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
+      Value="Launch SCapturer" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#SCapturerExe]" />
 
-    <UIRef Id="WixUI_Minimal" />
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <Publish
+        Dialog="ExitDialog"
+        Control="Finish"
+        Event="DoAction"
+        Value="LaunchSCapturer">
+        WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed AND NOT WIX_UPGRADE_DETECTED
+      </Publish>
+    </UI>
+
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -69,6 +99,24 @@
           Name="LICENSE"
           Source="$(var.LicenseFile)" />
 
+        <Shortcut
+          Id="UninstallShortcut"
+          Directory="XLabProgramMenuFolder"
+          Name="Uninstall SCapturer"
+          Description="Remove SCapturer from this Windows account"
+          Target="[SystemFolder]msiexec.exe"
+          Arguments="/x [ProductCode]"
+          WorkingDirectory="SystemFolder"
+          Advertise="no" />
+
+        <RegistryValue
+          Id="InstallLocationRegistryValue"
+          Root="HKCU"
+          Key="Software\X-LAB\SCapturer"
+          Name="InstallLocation"
+          Type="string"
+          Value="[INSTALLFOLDER]" />
+
         <RegistryValue
           Id="ApplicationComponentKeyPath"
           Root="HKCU"
@@ -87,10 +135,6 @@
           Directory="XLabInstallFolder"
           On="uninstall" />
         <RemoveFolder
-          Id="RemoveLocalProgramsFolder"
-          Directory="LocalProgramsFolder"
-          On="uninstall" />
-        <RemoveFolder
           Id="RemoveXLabProgramMenuFolder"
           Directory="XLabProgramMenuFolder"
           On="uninstall" />
@@ -100,6 +144,14 @@
     <Feature Id="Complete" Title="SCapturer" Level="1">
       <ComponentRef Id="ApplicationComponent" />
     </Feature>
+
+    <CustomAction
+      Id="LaunchSCapturer"
+      BinaryKey="WixCA"
+      DllEntry="WixShellExec"
+      Execute="immediate"
+      Return="ignore"
+      Impersonate="yes" />
 
     <CustomAction
       Id="ShutdownForMaintenance"

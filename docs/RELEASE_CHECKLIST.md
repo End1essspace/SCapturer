@@ -95,18 +95,26 @@ Validate from a clean extraction directory:
 Validate on a machine or user profile without an installed SCapturer MSI:
 
 - [ ] double-clicking the MSI opens a visible setup wizard;
-- [ ] the welcome/license page displays the complete MIT license;
+- [ ] the welcome page appears before the license page;
+- [ ] the license page displays the complete MIT license;
+- [ ] the installation-folder page displays the default path `%LOCALAPPDATA%\Programs\X-LAB\SCapturer`;
+- [ ] **Browse** accepts another current-user-writable folder;
 - [ ] cancelling before installation leaves SCapturer uninstalled;
 - [ ] installation progress is visible;
 - [ ] the completion page appears after a successful installation;
+- [ ] **Launch SCapturer** is present and enabled by default;
+- [ ] clearing **Launch SCapturer** leaves the application stopped after installation;
+- [ ] keeping **Launch SCapturer** selected starts the installed application after **Finish**;
 - [ ] installation succeeds without administrator elevation;
-- [ ] install directory is `%LOCALAPPDATA%\Programs\X-LAB\SCapturer`;
-- [ ] Start Menu shortcut is `X-LAB\SCapturer`;
+- [ ] the selected installation directory contains `SCapturer.exe` and `LICENSE`;
+- [ ] Start Menu contains `X-LAB\SCapturer`;
+- [ ] Start Menu contains `X-LAB\Uninstall SCapturer`;
 - [ ] no desktop shortcut is created;
 - [ ] Installed apps or Programs and Features shows one SCapturer entry;
+- [ ] the installed-app entry exposes modify and uninstall operations;
 - [ ] publisher is `X-LAB`;
+- [ ] product links point to the SCapturer repository and issue tracker;
 - [ ] installed executable opens the management console;
-- [ ] installed `LICENSE` is present beside the executable;
 - [ ] full and region capture work;
 - [ ] background mode works;
 - [ ] second-instance activation works;
@@ -115,6 +123,8 @@ Validate on a machine or user profile without an installed SCapturer MSI:
 ## MSI repair
 
 - [ ] opening the installed version's MSI exposes the standard maintenance flow;
+- [ ] the maintenance flow offers repair and remove;
+- [ ] the post-install launch checkbox is not used during maintenance;
 - [ ] start SCapturer and hide the console;
 - [ ] run MSI repair;
 - [ ] the running instance exits gracefully before file replacement;
@@ -128,7 +138,7 @@ Validate on a machine or user profile without an installed SCapturer MSI:
 
 Validate with the immediately preceding published MSI:
 
-- [ ] install the previous version;
+- [ ] install the previous version into a non-default writable folder;
 - [ ] change at least one setting;
 - [ ] enable autostart;
 - [ ] leave SCapturer running in the background;
@@ -136,6 +146,8 @@ Validate with the immediately preceding published MSI:
 - [ ] the previous process exits gracefully;
 - [ ] upgrade completes without a reboot or locked-file prompt;
 - [ ] the new executable reports the correct version;
+- [ ] the custom installation directory is preserved;
+- [ ] the application is not launched automatically by the upgrade;
 - [ ] settings remain unchanged;
 - [ ] screenshots and diagnostics remain unchanged;
 - [ ] autostart remains enabled and points to the installed executable;
@@ -145,11 +157,13 @@ Validate with the immediately preceding published MSI:
 ## MSI uninstall
 
 - [ ] start SCapturer in the background;
-- [ ] uninstall through Windows;
+- [ ] uninstall once through **Windows Settings → Apps → Installed apps**;
+- [ ] repeat the test after reinstalling by using `X-LAB\Uninstall SCapturer`;
+- [ ] the uninstall confirmation UI identifies SCapturer clearly;
 - [ ] SCapturer exits gracefully;
 - [ ] installed executable is removed;
 - [ ] installed `LICENSE` is removed;
-- [ ] Start Menu shortcut is removed;
+- [ ] both Start Menu shortcuts are removed;
 - [ ] installer-owned empty directories are removed;
 - [ ] SCapturer Run-key value is removed;
 - [ ] screenshots remain;

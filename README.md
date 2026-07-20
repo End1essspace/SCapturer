@@ -198,13 +198,13 @@ dist\release\0.1.0\
 └─ SHA256SUMS.txt
 ```
 
-The MSI installs for the current user under:
+The MSI installs for the current user without administrator elevation. Its default destination is:
 
 ```text
 %LOCALAPPDATA%\Programs\X-LAB\SCapturer
 ```
 
-It creates a Start Menu shortcut, includes the MIT license text, preserves user captures and settings during uninstall, and shuts down a running instance gracefully during maintenance.
+The setup wizard lets the user choose another writable folder, includes the MIT license text, offers optional launch after installation, and exposes repair or removal through maintenance mode and Windows Installed apps. It creates Start Menu shortcuts for launching and uninstalling SCapturer, preserves user captures and settings during uninstall, and shuts down a running instance gracefully during maintenance.
 
 See [Packaging](docs/PACKAGING.md) and the [Release checklist](docs/RELEASE_CHECKLIST.md).
 

@@ -35,7 +35,7 @@ The release machine needs:
 
 The generated executable includes the .NET runtime, so target computers do not need a separate .NET installation.
 
-The release script looks for `candle.exe` and `light.exe` in `PATH`, the `WIX` environment variable, and standard WiX 3.14 or 3.11 installation directories. MSI generation also requires `WixUIExtension.dll`, which is expected beside `light.exe` in a normal WiX 3 installation.
+The release script looks for `candle.exe` and `light.exe` in `PATH`, the `WIX` environment variable, and standard WiX 3.14 or 3.11 installation directories. MSI generation also requires `WixUIExtension.dll` and `WixUtilExtension.dll`, which are expected beside `light.exe` in a normal WiX 3 installation.
 
 ## Build a release candidate
 
@@ -150,24 +150,37 @@ WiX source:
 packaging\windows\SCapturer.wxs
 ```
 
-The MSI opens a standard `WixUI_Minimal` setup wizard with:
+The MSI uses the standard `WixUI_InstallDir` setup flow:
 
-- a combined welcome and MIT license agreement page;
-- visible installation progress;
-- a completion page;
-- standard maintenance behavior when the same version is opened again.
+1. welcome;
+2. MIT license agreement;
+3. installation folder selection with **Browse**;
+4. ready-to-install confirmation;
+5. visible installation progress;
+6. completion with a **Launch SCapturer** checkbox.
 
-The installation directory remains fixed by the package and is not user-selectable.
+The default destination is:
 
-The MSI is permanently scoped to the current user:
+```text
+%LOCALAPPDATA%\Programs\X-LAB\SCapturer
+```
+
+The user can select another folder that is writable by the current account. The selected location is stored under HKCU and reused by repair and later major upgrades.
+
+The MSI remains permanently scoped to the current user:
 
 | Property | Behavior |
 | --- | --- |
 | Elevation | Not required |
-| Install directory | `%LOCALAPPDATA%\Programs\X-LAB\SCapturer` |
-| Start Menu shortcut | `X-LAB\SCapturer` |
+| Default install directory | `%LOCALAPPDATA%\Programs\X-LAB\SCapturer` |
+| Custom install directory | Supported through the setup wizard |
+| Start Menu shortcuts | `X-LAB\SCapturer` and `X-LAB\Uninstall SCapturer` |
+| Installed apps entry | Modify and uninstall available |
 | Desktop shortcut | Not created |
+| Launch after installation | Optional and enabled by default |
 | Autostart | Remains opt-in inside SCapturer |
+
+The **Launch SCapturer** action runs as the current user only after a successful first installation. It is not triggered after repair, upgrade, cancellation, or uninstall.
 
 The application component uses an HKCU installer marker as its Windows Installer key path. Per-user installation and Start Menu directories are removed when they become empty.
 
@@ -196,7 +209,7 @@ The package uses:
 
 Installing a newer MSI performs a major upgrade. Installing an older MSI over a newer version is blocked.
 
-Repair and upgrade preserve the user's autostart preference. The executable path remains stable across versions.
+Repair and upgrade preserve the user's autostart preference and the selected installation directory.
 
 ## Uninstall data policy
 
@@ -204,7 +217,7 @@ Uninstall removes:
 
 - the installed executable;
 - the installed `LICENSE` file;
-- the Start Menu shortcut;
+- both Start Menu shortcuts;
 - empty installer-owned directories;
 - the SCapturer current-user autostart value.
 

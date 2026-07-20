@@ -251,16 +251,22 @@ if (-not $SkipMsi) {
     $wixSource = Join-Path $repositoryRoot 'packaging\windows\SCapturer.wxs'
     $wixObject = Join-Path $wixObjectDirectory 'SCapturer.wixobj'
     $licenseRtf = Join-Path $wixObjectDirectory 'LICENSE.rtf'
-    $wixUiExtension = Join-Path (Split-Path -Parent $light) 'WixUIExtension.dll'
+    $wixBinDirectory = Split-Path -Parent $light
+    $wixUiExtension = Join-Path $wixBinDirectory 'WixUIExtension.dll'
+    $wixUtilExtension = Join-Path $wixBinDirectory 'WixUtilExtension.dll'
 
-    if (-not (Test-Path -LiteralPath $wixUiExtension -PathType Leaf)) {
-        throw "WixUIExtension.dll was not found beside light.exe: $wixUiExtension"
+    foreach ($extension in @($wixUiExtension, $wixUtilExtension)) {
+        if (-not (Test-Path -LiteralPath $extension -PathType Leaf)) {
+            throw "Required WiX extension was not found: $extension"
+        }
     }
 
     New-RtfLicenseFile -SourcePath $licenseFile -DestinationPath $licenseRtf
 
     Invoke-Checked $candle @(
         '-nologo',
+        '-ext', $wixUiExtension,
+        '-ext', $wixUtilExtension,
         '-arch', 'x64',
         "-dProductVersion=$Version",
         "-dSourceDir=$publishDirectory",
@@ -274,6 +280,7 @@ if (-not $SkipMsi) {
         '-nologo',
         '-spdb',
         '-ext', $wixUiExtension,
+        '-ext', $wixUtilExtension,
         '-cultures:en-us',
         '-sice:ICE91',
         '-out', $msiPath,

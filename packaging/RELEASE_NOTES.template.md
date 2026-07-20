@@ -16,7 +16,7 @@ SCapturer is a Windows screenshot developer utility by **XCON**, built under **X
 - recent-capture browsing;
 - background operation, single-instance command forwarding, and opt-in autostart;
 - backend benchmarks and Windows reliability validation;
-- portable `win-x64` package and per-user MSI installer.
+- portable `win-x64` package and per-user MSI installer with selectable destination, visible maintenance, and optional post-install launch.
 
 ## Downloads
 
@@ -52,15 +52,20 @@ Run:
 SCapturer-v{{VERSION}}-win-x64.msi
 ```
 
-The MSI opens a standard Windows setup wizard with the MIT license agreement, visible installation progress, and a completion page.
+The MSI opens a standard Windows setup wizard with:
 
-It installs for the current user without administrator elevation:
+- welcome and MIT license pages;
+- installation-folder selection;
+- visible installation progress;
+- a completion page with an optional **Launch SCapturer** checkbox.
+
+The default per-user destination is:
 
 ```text
 %LOCALAPPDATA%\Programs\X-LAB\SCapturer
 ```
 
-The destination is fixed by the package. The installer creates the Start Menu shortcut `X-LAB\SCapturer`. Windows autostart remains disabled until enabled from **Background and Startup**.
+Another folder can be selected without changing the package to a per-machine installation. The installer creates `X-LAB\SCapturer` and `X-LAB\Uninstall SCapturer` in the Start Menu. Windows autostart remains disabled until enabled from **Background and Startup**.
 
 ## Default hotkeys
 
@@ -75,16 +80,16 @@ Hotkeys can be changed inside SCapturer.
 
 ## Upgrade and uninstall
 
-The MSI requests graceful shutdown before repair, upgrade, or uninstall.
+The MSI exposes repair and remove through its maintenance flow and through Windows Installed apps. It requests graceful shutdown before repair, upgrade, or uninstall.
 
-Upgrade and repair preserve:
+Upgrade and repair preserve the selected installation directory and:
 
 - settings;
 - screenshots;
 - diagnostics;
 - the user's autostart preference.
 
-Uninstall removes the application, Start Menu shortcut, and SCapturer autostart registration. It preserves screenshots, settings, and diagnostics.
+Uninstall removes the application, both Start Menu shortcuts, and SCapturer autostart registration. It preserves screenshots, settings, and diagnostics.
 
 Removing a portable copy only requires exiting SCapturer and deleting its folder. User data remains in the normal SCapturer data locations.
 
