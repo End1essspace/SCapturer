@@ -85,6 +85,12 @@ Uninstall removes the application, Start Menu shortcut, and SCapturer autostart 
 
 Removing a portable copy only requires exiting SCapturer and deleting its folder. User data remains in the normal SCapturer data locations.
 
+## License
+
+SCapturer is distributed under the MIT License.
+
+The complete license text is included in the repository, portable ZIP, and MSI installation.
+
 ## Verification
 
 Verify downloaded artifacts against `SHA256SUMS.txt` before use.

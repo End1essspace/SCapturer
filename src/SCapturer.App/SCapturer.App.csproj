@@ -15,7 +15,8 @@
     <Company>X-LAB</Company>
     <Title>SCapturer</Title>
     <Description>Performance-first Windows screenshot developer utility.</Description>
-    <Copyright>Copyright © XCON / X-LAB</Copyright>
+    <Copyright>Copyright © 2026 XCON</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
