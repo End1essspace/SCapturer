@@ -1,3 +1,4 @@
+
 # SCapturer v{{VERSION}}
 
 Released: {{DATE}}
@@ -51,13 +52,15 @@ Run:
 SCapturer-v{{VERSION}}-win-x64.msi
 ```
 
-The MSI installs for the current user without administrator elevation:
+The MSI opens a standard Windows setup wizard with the MIT license agreement, visible installation progress, and a completion page.
+
+It installs for the current user without administrator elevation:
 
 ```text
 %LOCALAPPDATA%\Programs\X-LAB\SCapturer
 ```
 
-It creates the Start Menu shortcut `X-LAB\SCapturer`. Windows autostart remains disabled until enabled from **Background and Startup**.
+The destination is fixed by the package. The installer creates the Start Menu shortcut `X-LAB\SCapturer`. Windows autostart remains disabled until enabled from **Background and Startup**.
 
 ## Default hotkeys
 

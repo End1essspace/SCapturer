@@ -1,3 +1,4 @@
+
 # Release checklist
 
 Complete this checklist for every public SCapturer release. Do not publish artifacts until all applicable items pass.
@@ -93,6 +94,11 @@ Validate from a clean extraction directory:
 
 Validate on a machine or user profile without an installed SCapturer MSI:
 
+- [ ] double-clicking the MSI opens a visible setup wizard;
+- [ ] the welcome/license page displays the complete MIT license;
+- [ ] cancelling before installation leaves SCapturer uninstalled;
+- [ ] installation progress is visible;
+- [ ] the completion page appears after a successful installation;
 - [ ] installation succeeds without administrator elevation;
 - [ ] install directory is `%LOCALAPPDATA%\Programs\X-LAB\SCapturer`;
 - [ ] Start Menu shortcut is `X-LAB\SCapturer`;
@@ -108,6 +114,7 @@ Validate on a machine or user profile without an installed SCapturer MSI:
 
 ## MSI repair
 
+- [ ] opening the installed version's MSI exposes the standard maintenance flow;
 - [ ] start SCapturer and hide the console;
 - [ ] run MSI repair;
 - [ ] the running instance exits gracefully before file replacement;

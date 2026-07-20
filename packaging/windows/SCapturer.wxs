@@ -26,6 +26,12 @@
 
     <Property Id="ARPCOMMENTS" Value="MIT-licensed Windows screenshot developer utility by XCON / X-LAB." />
     <Property Id="DISABLEADVTSHORTCUTS" Value="1" />
+    <Property
+      Id="WIXUI_EXITDIALOGOPTIONALTEXT"
+      Value="SCapturer was installed for the current user. Open it from the X-LAB folder in the Start Menu." />
+
+    <UIRef Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="LocalAppDataFolder">

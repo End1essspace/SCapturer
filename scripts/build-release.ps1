@@ -98,6 +98,25 @@ function New-CleanDirectory {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
 }
 
+function New-RtfLicenseFile {
+    param(
+        [Parameter(Mandatory)]
+        [string]$SourcePath,
+
+        [Parameter(Mandatory)]
+        [string]$DestinationPath
+    )
+
+    $licenseText = Get-Content -LiteralPath $SourcePath -Raw
+    $escaped = $licenseText.Replace('\', '\\')
+    $escaped = $escaped.Replace('{', '\{').Replace('}', '\}')
+    $escaped = $escaped.Replace("`r`n", '\par ')
+    $escaped = $escaped.Replace("`n", '\par ').Replace("`r", '\par ')
+
+    $rtf = "{\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}\viewkind4\uc1\pard\f0\fs18 $escaped}"
+    Set-Content -LiteralPath $DestinationPath -Value $rtf -Encoding ascii
+}
+
 function Assert-SingleFilePublish {
     param(
         [Parameter(Mandatory)]
@@ -231,6 +250,14 @@ if (-not $SkipMsi) {
     $light = Get-WixTool 'light.exe'
     $wixSource = Join-Path $repositoryRoot 'packaging\windows\SCapturer.wxs'
     $wixObject = Join-Path $wixObjectDirectory 'SCapturer.wixobj'
+    $licenseRtf = Join-Path $wixObjectDirectory 'LICENSE.rtf'
+    $wixUiExtension = Join-Path (Split-Path -Parent $light) 'WixUIExtension.dll'
+
+    if (-not (Test-Path -LiteralPath $wixUiExtension -PathType Leaf)) {
+        throw "WixUIExtension.dll was not found beside light.exe: $wixUiExtension"
+    }
+
+    New-RtfLicenseFile -SourcePath $licenseFile -DestinationPath $licenseRtf
 
     Invoke-Checked $candle @(
         '-nologo',
@@ -238,6 +265,7 @@ if (-not $SkipMsi) {
         "-dProductVersion=$Version",
         "-dSourceDir=$publishDirectory",
         "-dLicenseFile=$licenseFile",
+        "-dLicenseRtf=$licenseRtf",
         '-out', $wixObject,
         $wixSource
     )
@@ -245,6 +273,8 @@ if (-not $SkipMsi) {
     Invoke-Checked $light @(
         '-nologo',
         '-spdb',
+        '-ext', $wixUiExtension,
+        '-cultures:en-us',
         '-sice:ICE91',
         '-out', $msiPath,
         $wixObject

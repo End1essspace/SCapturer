@@ -1,3 +1,4 @@
+
 # Release packaging
 
 SCapturer ships two Windows x64 distributions from the same verified publish output:
@@ -34,7 +35,7 @@ The release machine needs:
 
 The generated executable includes the .NET runtime, so target computers do not need a separate .NET installation.
 
-The release script looks for `candle.exe` and `light.exe` in `PATH`, the `WIX` environment variable, and standard WiX 3.14 or 3.11 installation directories.
+The release script looks for `candle.exe` and `light.exe` in `PATH`, the `WIX` environment variable, and standard WiX 3.14 or 3.11 installation directories. MSI generation also requires `WixUIExtension.dll`, which is expected beside `light.exe` in a normal WiX 3 installation.
 
 ## Build a release candidate
 
@@ -148,6 +149,15 @@ WiX source:
 ```text
 packaging\windows\SCapturer.wxs
 ```
+
+The MSI opens a standard `WixUI_Minimal` setup wizard with:
+
+- a combined welcome and MIT license agreement page;
+- visible installation progress;
+- a completion page;
+- standard maintenance behavior when the same version is opened again.
+
+The installation directory remains fixed by the package and is not user-selectable.
 
 The MSI is permanently scoped to the current user:
 
