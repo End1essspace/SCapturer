@@ -23,7 +23,6 @@ $appProject = Join-Path $repositoryRoot 'src\SCapturer.App\SCapturer.App.csproj'
 $testProject = Join-Path $repositoryRoot 'tests\SCapturer.Tests\SCapturer.Tests.csproj'
 $reliabilityProject = Join-Path $repositoryRoot 'tools\SCapturer.Reliability\SCapturer.Reliability.csproj'
 $publishProfile = 'win-x64'
-$licenseFile = Join-Path $repositoryRoot 'LICENSE'
 
 $workRoot = Join-Path $repositoryRoot "dist\work\$Version"
 $publishDirectory = Join-Path $workRoot 'publish\win-x64'
@@ -144,14 +143,6 @@ Write-Host "SCapturer release build v$Version" -ForegroundColor Cyan
 Write-Host "Repository : $repositoryRoot"
 Write-Host "Release    : $releaseDirectory"
 
-if (-not (Test-Path -LiteralPath $licenseFile -PathType Leaf)) {
-    throw "The repository LICENSE file is missing."
-}
-
-if ((Get-Item -LiteralPath $licenseFile).Length -le 0) {
-    throw "The repository LICENSE file is empty."
-}
-
 New-CleanDirectory $workRoot
 New-CleanDirectory $releaseDirectory
 New-Item -ItemType Directory -Path $publishDirectory -Force | Out-Null
@@ -200,22 +191,11 @@ if ($versionInfo.FileVersion -ne $assemblyVersion) {
 
 New-CleanDirectory $portableStage
 Copy-Item -LiteralPath $publishedExe -Destination $portableStage
-Copy-Item -LiteralPath $licenseFile -Destination (Join-Path $portableStage 'LICENSE')
 
 $portableReadmeTemplate = Join-Path $repositoryRoot 'packaging\portable\README.txt'
 $portableReadme = (Get-Content -LiteralPath $portableReadmeTemplate -Raw)
 $portableReadme = $portableReadme.Replace('{{VERSION}}', $Version)
 Set-Content -LiteralPath (Join-Path $portableStage 'README.txt') -Value $portableReadme -Encoding utf8
-
-$portableFileNames = @(
-    Get-ChildItem -LiteralPath $portableStage -File |
-        Sort-Object Name |
-        Select-Object -ExpandProperty Name
-)
-$expectedPortableFileNames = @('LICENSE', 'README.txt', 'SCapturer.exe')
-if (($portableFileNames -join '|') -ne ($expectedPortableFileNames -join '|')) {
-    throw "Unexpected portable package contents: $($portableFileNames -join ', ')"
-}
 
 if (Test-Path -LiteralPath $portableArchive) {
     Remove-Item -LiteralPath $portableArchive -Force
@@ -237,7 +217,6 @@ if (-not $SkipMsi) {
         '-arch', 'x64',
         "-dProductVersion=$Version",
         "-dSourceDir=$publishDirectory",
-        "-dLicenseFile=$licenseFile",
         '-out', $wixObject,
         $wixSource
     )
