@@ -1,36 +1,42 @@
-# SCapturer release packaging
+# Release packaging
 
-SCapturer produces two Windows x64 release artifacts from one verified publish output:
+SCapturer ships two Windows x64 distributions from the same verified publish output:
 
-- a portable ZIP;
-- a per-user MSI installer.
+| Artifact | Purpose |
+| --- | --- |
+| `SCapturer-v<version>-win-x64-portable.zip` | Portable use without an installer |
+| `SCapturer-v<version>-win-x64.msi` | Per-user installation with Start Menu integration |
 
-Both packages contain the same self-contained single-file `SCapturer.exe`.
+Both distributions contain the same self-contained, single-file `SCapturer.exe`.
 
 ## Release identity
 
-Default first packaged release:
+| Field | Value |
+| --- | --- |
+| Product | SCapturer |
+| Publisher | X-LAB |
+| Author | XCON |
+| Version format | `major.minor.patch` |
+| Runtime | .NET 8, self-contained |
+| Architecture | `win-x64` |
+| Primary target | Windows 11 x64 |
+| Compatibility target | Windows 10 version 2004 or newer, best effort |
 
-```text
-Product        SCapturer
-Publisher      X-LAB
-Author         XCON
-Version        0.1.0
-Architecture   win-x64
-Target         .NET 8 self-contained
-```
+An application icon is not configured in the current package. This is intentional and does not affect the packaging layout.
 
-An application icon is intentionally not configured yet. Adding one later does not require changing the packaging architecture.
+## Build requirements
 
-## Prerequisites
+The release machine needs:
 
-- Windows 10 version 2004 or newer;
-- .NET 8 SDK;
+- Windows;
+- the .NET 8 SDK;
 - WiX Toolset 3.14 for MSI generation.
 
-The produced EXE is self-contained; target computers do not need a separately installed .NET runtime.
+The generated executable includes the .NET runtime, so target computers do not need a separate .NET installation.
 
-## One-command release build
+The release script looks for `candle.exe` and `light.exe` in `PATH`, the `WIX` environment variable, and standard WiX 3.14 or 3.11 installation directories.
+
+## Build a release candidate
 
 Run from the repository root:
 
@@ -38,32 +44,43 @@ Run from the repository root:
 .\scripts\build-release.ps1 -Version 0.1.0
 ```
 
-The script performs:
+A normal release build performs:
 
 1. clean;
 2. restore;
-3. Release build;
-4. deterministic logic tests;
-5. full reliability gate;
+3. Release build with the requested version;
+4. automated logic tests;
+5. the default Windows reliability workload;
 6. self-contained single-file publish;
-7. portable ZIP creation;
+7. portable package creation;
 8. MSI compilation and linking;
-9. SHA-256 generation;
-10. artifact validation.
+9. release-note generation;
+10. SHA-256 generation;
+11. artifact validation.
 
-Optional development switches:
+A release candidate must be built without skip switches.
+
+### Development switches
+
+The following switches are available for local iteration:
+
+| Switch | Effect |
+| --- | --- |
+| `-SkipTests` | Skip the deterministic logic-test executable |
+| `-SkipReliability` | Skip the Windows reliability workload |
+| `-SkipMsi` | Build the portable package without compiling the MSI |
+
+Example:
 
 ```powershell
-.\scripts\build-release.ps1 -Version 0.1.0 -SkipReliability
+.\scripts\build-release.ps1 -Version 0.1.0 -SkipReliability -SkipMsi
 ```
 
-```powershell
-.\scripts\build-release.ps1 -Version 0.1.0 -SkipMsi
-```
-
-These switches are intended for local iteration. A release candidate should be built without skips.
+Artifacts produced with any skip switch are not complete release candidates.
 
 ## Output
+
+A complete build creates:
 
 ```text
 dist\release\0.1.0\
@@ -73,125 +90,113 @@ dist\release\0.1.0\
 └─ SHA256SUMS.txt
 ```
 
-The temporary publish and WiX object directories are deleted after a successful build.
+Temporary publish, portable-staging, and WiX object directories are kept under `dist\work\<version>` during the build and removed after success.
 
-## Publish profile
+## Publish contract
 
-The deterministic publish profile is stored at:
+The publish profile is stored at:
 
 ```text
 src\SCapturer.App\Properties\PublishProfiles\win-x64.pubxml
 ```
 
-It explicitly enables:
+It configures:
 
+- `Release`;
 - `win-x64`;
 - self-contained deployment;
-- single-file output;
-- native-library extraction from the single executable;
-- no trimming;
-- no ReadyToRun;
-- no debug symbols.
+- single-file publishing;
+- native-library extraction from the executable;
+- trimming disabled;
+- ReadyToRun disabled;
+- debug symbols disabled.
 
-The .NET SDK may emit optional portable PDB files for referenced projects even when the application publish profile disables symbols. The release script removes any `*.pdb` files from the publish staging directory, then rejects the output unless exactly one non-empty deployable file named `SCapturer.exe` remains.
+The .NET SDK can still emit optional portable PDB files for referenced projects. The release script removes `*.pdb` files from the staging directory and then enforces this invariant:
+
+```text
+The deployable publish directory contains exactly one non-empty file:
+SCapturer.exe
+```
+
+The script also verifies that the executable file version matches `<version>.0`.
 
 ## Portable package
 
-The portable archive contains files at ZIP root:
+The portable ZIP contains exactly these files at its root:
 
 ```text
 SCapturer.exe
 README.txt
 ```
 
-It does not alter the registry during extraction. SCapturer autostart remains an explicit runtime setting controlled from the application.
+Extraction does not modify the registry or enable autostart.
 
-For stable autostart behavior, keep the portable executable in a stable folder. If it is moved, SCapturer reports the existing autostart registration as stale and can repair it.
+For stable autostart behavior, keep `SCapturer.exe` in a permanent folder. When the executable moves, SCapturer identifies the existing Run-key command as stale and can repair it from **Background and Startup**.
+
+To remove the portable copy:
+
+1. exit SCapturer gracefully;
+2. delete the portable folder.
+
+Screenshots, settings, and diagnostics remain in their user-data locations.
 
 ## MSI package
 
-The WiX source is:
+WiX source:
 
 ```text
 packaging\windows\SCapturer.wxs
 ```
 
-Installation scope is per-user. No administrator elevation is required.
+The MSI is permanently scoped to the current user:
 
-Installation directory:
+| Property | Behavior |
+| --- | --- |
+| Elevation | Not required |
+| Install directory | `%LOCALAPPDATA%\Programs\X-LAB\SCapturer` |
+| Start Menu shortcut | `X-LAB\SCapturer` |
+| Desktop shortcut | Not created |
+| Autostart | Remains opt-in inside SCapturer |
 
-```text
-%LOCALAPPDATA%\Programs\X-LAB\SCapturer\SCapturer.exe
-```
+The application component uses an HKCU installer marker as its Windows Installer key path. Per-user installation and Start Menu directories are removed when they become empty.
 
-Start Menu shortcut:
+WiX validation remains enabled except for `ICE91`. That warning is suppressed deliberately because the package is explicitly and permanently `perUser`; it describes a hypothetical per-machine use of the same directory tree.
 
-```text
-X-LAB\SCapturer
-```
+## Maintenance commands
 
-No desktop shortcut is created.
+The installer uses internal command-line actions before replacing or removing the executable:
 
-The application component uses an HKCU installer marker as its Windows Installer key path. This is required for a component that installs into the current user's profile and owns a non-advertised Start Menu shortcut. Empty per-user installation and Start Menu directories are explicitly removed during uninstall.
+| Operation | Command | Autostart behavior |
+| --- | --- | --- |
+| Repair or major upgrade | `SCapturer.exe --shutdown-for-update` | Preserved |
+| Real uninstall | `SCapturer.exe --prepare-uninstall` | Removed |
 
-WiX `ICE91` is suppressed deliberately during linking because the package is permanently scoped to `perUser`; the warning only describes the hypothetical behavior of the same directory tree in a per-machine package. All other ICE validation remains enabled.
+Both commands request graceful shutdown through the normal single-instance channel and wait for the instance mutex to be released. The maintenance process returns a failure code when shutdown does not complete within 45 seconds.
 
-## Autostart ownership
-
-The MSI does not enable Windows autostart. The user enables or disables it from SCapturer.
-
-On a real uninstall, the MSI invokes:
-
-```text
-SCapturer.exe --prepare-uninstall
-```
-
-This command:
-
-1. removes the SCapturer current-user Run value;
-2. asks a running SCapturer instance to exit gracefully;
-3. waits for the single-instance mutex to be released;
-4. returns a failure code if shutdown does not complete within 45 seconds.
-
-During repair or major upgrade, the MSI instead invokes:
-
-```text
-SCapturer.exe --shutdown-for-update
-```
-
-This preserves the autostart preference while still waiting for graceful process shutdown before file replacement.
-
-Both arguments are internal maintenance commands and are not part of the normal interactive command surface.
+These arguments are installer-facing operations, not normal interactive commands.
 
 ## Upgrade policy
 
-The MSI uses a stable `UpgradeCode` and a generated `ProductCode` for each build. Versions follow:
+The package uses:
 
-```text
-major.minor.patch
-```
+- one stable `UpgradeCode`;
+- a generated `ProductCode` for each build;
+- semantic three-part versions such as `0.1.0`, `0.1.1`, `0.2.0`, and `1.0.0`.
 
-Examples:
+Installing a newer MSI performs a major upgrade. Installing an older MSI over a newer version is blocked.
 
-```text
-0.1.0
-0.1.1
-0.2.0
-1.0.0
-```
-
-Installing a newer MSI performs a major upgrade. Installing an older version over a newer version is blocked.
+Repair and upgrade preserve the user's autostart preference. The executable path remains stable across versions.
 
 ## Uninstall data policy
 
-MSI uninstall removes:
+Uninstall removes:
 
-- installed `SCapturer.exe`;
-- Start Menu shortcut;
-- empty installation directories;
-- SCapturer autostart registration.
+- the installed executable;
+- the Start Menu shortcut;
+- empty installer-owned directories;
+- the SCapturer current-user autostart value.
 
-MSI uninstall preserves:
+Uninstall preserves user-owned data:
 
 ```text
 %USERPROFILE%\Pictures\SCapturer\
@@ -199,16 +204,25 @@ MSI uninstall preserves:
 %LOCALAPPDATA%\SCapturer\diagnostics\
 ```
 
-Screenshots and application data are user-owned and must not be silently deleted by the installer.
+The installer must never silently delete screenshots, settings, or diagnostic evidence.
 
-## Manual publish
+## Manual executable publish
 
-To produce only the self-contained executable:
+To publish only the self-contained executable:
 
 ```powershell
 dotnet publish .\src\SCapturer.App\SCapturer.App.csproj -p:PublishProfile=win-x64 -p:Version=0.1.0 -p:AssemblyVersion=0.1.0.0 -p:FileVersion=0.1.0.0 -p:InformationalVersion=0.1.0 -o .\dist\publish\win-x64
 ```
 
-## Packaging acceptance
+This command does not create the portable ZIP, MSI, release notes, checksums, or release-verification evidence.
 
-Use [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) before publishing artifacts externally.
+## Release verification
+
+Before publishing, complete [Release checklist](RELEASE_CHECKLIST.md). Keep the following as release evidence:
+
+- the exact source commit;
+- automated test output;
+- the reliability report;
+- portable and MSI validation results;
+- `RELEASE_NOTES.md`;
+- `SHA256SUMS.txt`.
