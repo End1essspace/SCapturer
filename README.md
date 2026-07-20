@@ -204,7 +204,7 @@ The MSI installs for the current user under:
 %LOCALAPPDATA%\Programs\X-LAB\SCapturer
 ```
 
-It creates a Start Menu shortcut, preserves user captures and settings during uninstall, and shuts down a running instance gracefully during maintenance.
+It creates a Start Menu shortcut, includes the MIT license text, preserves user captures and settings during uninstall, and shuts down a running instance gracefully during maintenance.
 
 See [Packaging](docs/PACKAGING.md) and the [Release checklist](docs/RELEASE_CHECKLIST.md).
 
@@ -253,6 +253,12 @@ legacy/                  Original Batch/PowerShell prototype
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Reliability](docs/RELIABILITY.md)
 - [Storage and clipboard](docs/STORAGE_AND_CLIPBOARD.md)
+
+## License
+
+SCapturer is released under the [MIT License](LICENSE).
+
+Copyright © 2026 Azizbek Adizov.
 
 ## Project history
 

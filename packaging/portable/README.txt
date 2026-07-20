@@ -7,6 +7,7 @@ PACKAGE CONTENTS
 ----------------
 SCapturer.exe
 README.txt
+LICENSE
 
 SCapturer is self-contained. A separate .NET installation is not required.
 
@@ -70,6 +71,12 @@ SCapturer.exe --exit
 
 SCapturer accepts one action per invocation. When an instance is already
 running, the new process forwards the action and exits.
+
+LICENSE
+-------
+SCapturer is distributed under the MIT License.
+
+The complete license text is included in the LICENSE file.
 
 UPDATING THE PORTABLE COPY
 --------------------------

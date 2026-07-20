@@ -127,9 +127,10 @@ The portable ZIP contains exactly these files at its root:
 ```text
 SCapturer.exe
 README.txt
+LICENSE
 ```
 
-Extraction does not modify the registry or enable autostart.
+The included `LICENSE` file contains the complete MIT license text. Extraction does not modify the registry or enable autostart.
 
 For stable autostart behavior, keep `SCapturer.exe` in a permanent folder. When the executable moves, SCapturer identifies the existing Run-key command as stale and can repair it from **Background and Startup**.
 
@@ -192,6 +193,7 @@ Repair and upgrade preserve the user's autostart preference. The executable path
 Uninstall removes:
 
 - the installed executable;
+- the installed `LICENSE` file;
 - the Start Menu shortcut;
 - empty installer-owned directories;
 - the SCapturer current-user autostart value.
@@ -224,5 +226,6 @@ Before publishing, complete [Release checklist](RELEASE_CHECKLIST.md). Keep the 
 - automated test output;
 - the reliability report;
 - portable and MSI validation results;
+- confirmation that both distributions include the MIT license text;
 - `RELEASE_NOTES.md`;
 - `SHA256SUMS.txt`.

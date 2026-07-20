@@ -17,6 +17,7 @@ Complete this checklist for every public SCapturer release. Do not publish artif
 - [ ] local `main` is synchronized with `origin/main`;
 - [ ] version uses `major.minor.patch`;
 - [ ] release notes describe the version being published;
+- [ ] repository and distributed packages identify the license as MIT;
 - [ ] Release build completes with zero warnings and zero errors;
 - [ ] deterministic logic tests pass;
 - [ ] default Windows reliability workload passes;
@@ -68,11 +69,13 @@ The ZIP root must contain only:
 ```text
 SCapturer.exe
 README.txt
+LICENSE
 ```
 
 Validate from a clean extraction directory:
 
 - [ ] `README.txt` contains the correct version;
+- [ ] `LICENSE` contains the complete MIT license text and the correct copyright holder;
 - [ ] application starts without a separately installed .NET runtime;
 - [ ] full-desktop capture works;
 - [ ] region capture works;
@@ -97,6 +100,7 @@ Validate on a machine or user profile without an installed SCapturer MSI:
 - [ ] Installed apps or Programs and Features shows one SCapturer entry;
 - [ ] publisher is `X-LAB`;
 - [ ] installed executable opens the management console;
+- [ ] installed `LICENSE` is present beside the executable;
 - [ ] full and region capture work;
 - [ ] background mode works;
 - [ ] second-instance activation works;
@@ -137,6 +141,7 @@ Validate with the immediately preceding published MSI:
 - [ ] uninstall through Windows;
 - [ ] SCapturer exits gracefully;
 - [ ] installed executable is removed;
+- [ ] installed `LICENSE` is removed;
 - [ ] Start Menu shortcut is removed;
 - [ ] installer-owned empty directories are removed;
 - [ ] SCapturer Run-key value is removed;
