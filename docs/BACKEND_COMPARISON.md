@@ -1,81 +1,117 @@
-# SCapturer Capture Backend Comparison
+# Capture backend comparison
 
-## Purpose
+SCapturer provides two complete Windows capture backends behind the same `ICaptureBackend` contract. They share the same display-topology model, capture queue, persistence rules, clipboard path, and region-selection workflow.
 
-P7 introduces two complete screenshot backends behind the same capture contract.
+## Implementations
 
-### Reference GDI+
+| Backend | Pixel acquisition | Region crop | PNG encoding |
+| --- | --- | --- | --- |
+| Reference GDI+ | `Graphics.CopyFromScreen` into `System.Drawing.Bitmap` | GDI+ `DrawImage` | `Bitmap.Save` |
+| Native GDI + WIC | `BitBlt` into a top-down 32-bit `CreateDIBSection` | memory-DC `BitBlt` | WIC `IWICBitmapFrameEncode::WritePixels` |
 
-- `System.Drawing.Bitmap` allocation;
-- `Graphics.CopyFromScreen` pixel acquisition;
-- GDI+ PNG persistence through `Bitmap.Save`.
-
-### Native GDI + WIC
-
-- top-down 32-bit `CreateDIBSection` buffer;
-- direct desktop transfer through `BitBlt`;
-- direct crop through memory-DC `BitBlt`;
-- Windows Imaging Component PNG encoding through `IWICBitmapEncoder` and `IWICBitmapFrameEncode::WritePixels`.
-
-Both backends retain the existing physical display-topology and bounded-worker rules.
+The reference implementation is the compatibility and rollback path. The native implementation keeps pixels in one BGRA buffer that can also be exposed through a non-owning `Bitmap` view for the overlay and clipboard path.
 
 ## Backend modes
 
 SCapturer stores one of three modes:
 
-- `ReferenceGdiPlus` — always use the reference implementation;
-- `NativeGdiWic` — use native when available, otherwise expose a visible reference fallback;
-- `Auto` — prefer native when WIC is available, otherwise use reference.
+| Mode | Behavior |
+| --- | --- |
+| `ReferenceGdiPlus` | Always use the reference backend |
+| `NativeGdiWic` | Use the native backend when WIC is available; otherwise use the reference backend and expose the fallback reason |
+| `Auto` | Prefer the native backend when available; otherwise use the reference backend |
 
-New installations begin on `ReferenceGdiPlus`. The native path is not made primary until the comparison gate is executed.
+New settings default to `ReferenceGdiPlus`. Users can change the requested mode from **Capture Settings**, and the Diagnostics page can persist the recommendation produced by a comparison run.
 
-## Comparison procedure
+Native availability is probed through Windows Imaging Component initialization. A failed probe does not prevent capture because the reference backend remains available.
 
-The Diagnostics page can run a backend comparison.
+## Running a comparison
 
-For each backend it performs:
+Open **Diagnostics and Benchmark** and select the backend-comparison action.
+
+The application runs the following workload for each backend:
 
 - one warm-up full-desktop capture;
 - ten measured full-desktop captures;
-- clipboard disabled;
+- clipboard publication disabled;
 - capture sound disabled;
+- per-capture diagnostics disabled;
 - PNG persistence enabled;
-- temporary PNG cleanup after every sample.
+- generated benchmark images deleted after sampling when possible.
 
-Both series use the same active display topology and target volume.
+Both sides use the same configured destination volume and benchmark settings. Keep the display layout and desktop workload unchanged for the duration of the run; the benchmark does not reserve the machine or freeze display topology between the two series.
 
-The report is written to:
+Reports are written to:
 
 ```text
 %LOCALAPPDATA%\SCapturer\diagnostics\benchmarks\backend-comparison_*.json
 ```
 
-## Decision gate
+Each report includes environment metadata, both sample sets, summary statistics, the recommended mode, and the exact decision reason.
 
-Native is recommended only when all of the following are true:
+## Metrics
 
-1. native median total latency does not regress by more than 5%;
-2. native improves either p95 total latency or managed allocations by at least 20%.
+The comparison evaluates complete capture latency and managed allocation behavior. The report contains:
 
-When native passes, SCapturer persists `NativeGdiWic` as the selected mode.
+- median total latency;
+- p95 total latency;
+- fastest and slowest total latency;
+- median pixel-acquisition time;
+- median PNG-persistence time;
+- average managed bytes allocated;
+- average PNG file size.
 
-When native does not pass, SCapturer persists `ReferenceGdiPlus`.
+With the default ten measured samples, SCapturer uses the nearest-rank percentile calculation, so p95 resolves to the slowest sample in that series.
 
-The report always retains both sample sets and the exact decision reason.
+## Decision rule
 
-## Correctness checks
+The native backend is recommended only when both conditions are satisfied:
 
-Performance alone is not sufficient. Validate both backends for:
+1. native median total latency is no more than 5% slower than reference;
+2. native improves either p95 total latency or average managed allocations by at least 20%.
 
-- exact PNG dimensions;
-- pixel-aligned region selection;
-- negative virtual-screen coordinates;
-- mixed-DPI monitor layouts;
-- topology cancellation during snipping;
-- clipboard equivalence;
-- no alpha transparency in saved PNG files;
-- no GDI, USER, COM, or file-handle growth.
+Improvement is calculated as:
+
+```text
+(reference - native) / reference × 100
+```
+
+A passing result persists `NativeGdiWic`. A non-passing result persists `ReferenceGdiPlus`.
+
+The decision is intentionally conservative: a lower-level implementation is not selected merely because one isolated phase is faster.
+
+## Interpreting results
+
+Treat the generated recommendation as evidence for the tested machine and display layout, not as a universal ranking.
+
+Before accepting a result:
+
+- close unrelated high-CPU and high-I/O workloads;
+- keep the monitor layout unchanged;
+- run from the same build configuration;
+- compare complete latency, not only pixel acquisition;
+- inspect repeated runs when the result is close to a threshold;
+- retain the JSON report used for a release decision.
+
+PNG persistence may dominate the end-to-end result on large or visually complex desktops. A faster `BitBlt` path can therefore produce only a small total-latency improvement.
+
+## Correctness requirements
+
+Performance does not override capture correctness. Validate both backends for:
+
+- exact full-desktop and region dimensions;
+- pixel-aligned region boundaries;
+- negative virtual-desktop coordinates;
+- mixed-DPI and multi-monitor layouts;
+- cancellation when topology changes during region selection;
+- opaque alpha in saved PNG files;
+- equivalent clipboard output;
+- no linear growth in GDI objects, USER objects, process handles, COM state, or temporary files.
+
+Use [Display validation matrix](DISPLAY_TEST_MATRIX.md) for display-specific checks and [Reliability validation](RELIABILITY.md) for repeated resource testing.
 
 ## Rollback
 
-The Capture Settings page allows immediate backend switching. The reference backend remains compiled into the executable and does not depend on WIC availability.
+The reference backend is always compiled into the application. Select `ReferenceGdiPlus` from **Capture Settings** to roll back immediately.
+
+Selecting `NativeGdiWic` or `Auto` on a system where WIC initialization fails also produces an explicit reference fallback rather than disabling capture.
