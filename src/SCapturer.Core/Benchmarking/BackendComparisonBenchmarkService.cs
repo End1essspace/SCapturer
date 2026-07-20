@@ -155,7 +155,7 @@ public sealed class BackendComparisonBenchmarkService
                 native.BackendName,
                 p95Improvement,
                 allocationImprovement,
-                "Native met the P7 gate: at least 20% p95 or managed-allocation improvement without a median-total regression above 5%.");
+                "Native met the backend selection gate: at least 20% p95 or managed-allocation improvement without a median-total regression above 5%.");
         }
 
         return new BackendComparisonDecision(
