@@ -135,6 +135,10 @@
           Directory="XLabInstallFolder"
           On="uninstall" />
         <RemoveFolder
+          Id="RemoveLocalProgramsFolder"
+          Directory="LocalProgramsFolder"
+          On="uninstall" />
+        <RemoveFolder
           Id="RemoveXLabProgramMenuFolder"
           Directory="XLabProgramMenuFolder"
           On="uninstall" />
